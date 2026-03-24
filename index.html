@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>unheaded</title>
+  <link rel="stylesheet" href="css/occult_style.css">
+</head>
+<body>
+
+  <canvas id="rain-canvas"></canvas>
+  <div id="lightning-overlay"></div>
+
+  <nav>
+    <a href="/" class="logo"><span class="mark">◈</span> unheaded</a>
+    <ul>
+      <li><a href="/kingdom.html">kingdom</a></li>
+      <li><a href="/pattern.html">pattern</a></li>
+      <li><a href="/court.html">court</a></li>
+      <li><a href="/hollows.html">hollows</a></li>
+    </ul>
+  </nav>
+
+  <main class="page centered">
+
+    <h1>unheaded<br>bellicists</h1>
+
+    <div class="sigil">
+      <a href="https://www.bellis.tech/">
+        <img src="sm-logo-L.png" alt="headless armor, shield raised"><!--
+        --><img src="sm-logo-R.png" alt="headless armor, sword drawn">
+      </a>
+    </div>
+
+    <p class="etymology">bellus — pretty &nbsp;|&nbsp; perennis — everlasting</p>
+
+    <div class="poetry reveal">
+      <p>Day's eye opens at dawn, daisy closes at dusk.</p>
+      <p>war makes states. states make war.<br>
+      extinction builds headless empires.</p>
+    </div>
+
+    <div class="whisper reveal">
+      roots in bare metal.<br>
+      fabric woven through virtual leaves.<br>
+      every breath marked, every current traced.<br>
+      edges hold. layers breathe.<br><br>
+      <em>perennial by design.</em>
+    </div>
+
+    <hr class="divider">
+
+    <div class="entries reveal">
+
+      <a href="/kingdom.html" class="entry">
+        <h3>the kingdom</h3>
+        <p>a hierarchy of sacred law and divine architecture.<br>
+        eight layers descending from the throne to the moat.</p>
+      </a>
+
+      <a href="/pattern.html" class="entry">
+        <h3>the pattern</h3>
+        <p>inscribed in a cavern beneath the castle.<br>
+        walk it and gain dominion over shadow.</p>
+      </a>
+
+      <a href="/court.html" class="entry">
+        <h3>the royal court</h3>
+        <p>nine who serve the throne. each asks a different question.<br>
+        together they see what none can see alone.</p>
+      </a>
+
+      <a href="/hollows.html" class="entry">
+        <h3>the arcane hollows</h3>
+        <p>beneath the visible world, the deep magic flows.<br>
+        nine chambers of hidden knowledge.</p>
+      </a>
+
+    </div>
+
+    <p class="nodes">bellistek · bellistech · bellicists · unheaded</p>
+
+    <p class="here"><span class="glyph">◈</span> here we are.</p>
+
+  </main>
+
+  <footer>
+    <a href="https://www.bellis.tech/">bellis.tech</a>
+    &nbsp;·&nbsp;
+    <a href="https://github.com/unheaded">github</a>
+    &nbsp;·&nbsp;
+    the free kingdom
+  </footer>
+
+  <script src="js/rain.js"></script>
+  <script>
+    // Scroll reveal
+    const reveals = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          observer.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.15 });
+    reveals.forEach(el => observer.observe(el));
+  </script>
+
+</body>
+</html>

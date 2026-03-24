@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>unheaded — the map (rings)</title>
+  <link rel="stylesheet" href="css/occult_style.css">
+  <style>
+    .map-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem 0;
+    }
+
+    .map-svg {
+      width: 100%;
+      max-width: 700px;
+      height: auto;
+    }
+
+    .ring {
+      fill: none;
+      stroke: #222;
+      stroke-width: 1;
+      transition: all 0.5s ease;
+      cursor: pointer;
+    }
+
+    .ring:hover {
+      stroke: #555;
+      stroke-width: 1.5;
+    }
+
+    .ring-fill {
+      fill: rgba(255, 255, 255, 0.01);
+      transition: fill 0.5s ease;
+      cursor: pointer;
+    }
+
+    .ring-fill:hover {
+      fill: rgba(180, 200, 240, 0.03);
+    }
+
+    .ring-label {
+      font-family: 'Courier New', monospace;
+      fill: #3a3a3a;
+      font-size: 9px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      text-anchor: middle;
+      transition: fill 0.5s ease;
+      pointer-events: none;
+    }
+
+    .ring-group:hover .ring-label {
+      fill: #999;
+    }
+
+    .ring-group:hover .ring {
+      stroke: #555;
+    }
+
+    /* Monad core */
+    .monad-core {
+      fill: #0a0a0a;
+      stroke: #444;
+      stroke-width: 1.5;
+      transition: all 0.5s ease;
+    }
+
+    .monad-core:hover {
+      stroke: #888;
+      filter: drop-shadow(0 0 12px rgba(180, 200, 240, 0.3));
+    }
+
+    .monad-label {
+      font-family: 'Courier New', monospace;
+      fill: #fff;
+      font-size: 11px;
+      letter-spacing: 4px;
+      text-anchor: middle;
+      pointer-events: none;
+      text-shadow: 0 0 8px rgba(180, 200, 240, 0.5);
+    }
+
+    .monad-glyph {
+      font-family: 'Courier New', monospace;
+      fill: #666;
+      font-size: 14px;
+      text-anchor: middle;
+      pointer-events: none;
+      animation: pulse 4s ease-in-out infinite;
+    }
+
+    /* Detail text on hover */
+    .ring-detail {
+      font-family: 'Courier New', monospace;
+      fill: #555;
+      font-size: 7px;
+      letter-spacing: 1px;
+      text-anchor: middle;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      pointer-events: none;
+    }
+
+    .ring-group:hover .ring-detail {
+      opacity: 1;
+    }
+
+    /* Floating labels above */
+    .crown-label {
+      font-family: 'Courier New', monospace;
+      fill: #444;
+      font-size: 8px;
+      letter-spacing: 2px;
+      text-anchor: middle;
+      text-transform: uppercase;
+    }
+
+    .crown-line {
+      stroke: #222;
+      stroke-width: 0.5;
+      stroke-dasharray: 2, 4;
+    }
+
+    /* Moat — outermost */
+    .moat-ring {
+      stroke: #1a1a1a;
+      stroke-width: 2;
+      stroke-dasharray: 4, 3;
+    }
+
+    .moat-ring:hover {
+      stroke: #333;
+    }
+
+    /* Hollows — dashed */
+    .hollows-ring {
+      stroke-dasharray: 2, 4;
+    }
+
+    /* Red glow on hollows hover */
+    .ring-group.hollows:hover .ring {
+      stroke: #442222;
+      filter: drop-shadow(0 0 6px rgba(200, 30, 30, 0.2));
+    }
+
+    .ring-group.hollows:hover .ring-label {
+      fill: #884444;
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="rain-canvas"></canvas>
+  <div id="lightning-overlay"></div>
+
+  <nav>
+    <a href="/" class="logo"><span class="mark">◈</span> unheaded</a>
+    <ul>
+      <li><a href="/kingdom.html">kingdom</a></li>
+      <li><a href="/pattern.html">pattern</a></li>
+      <li><a href="/court.html">court</a></li>
+      <li><a href="/hollows.html">hollows</a></li>
+    </ul>
+  </nav>
+
+  <main class="page-wide" style="max-width: 750px;">
+
+    <h1>the map</h1>
+    <p class="etymology">option a — concentric emanation</p>
+
+    <div class="poetry reveal">
+      <p>All things emanate from the One.<br>
+      Each ring is a layer of reality,<br>
+      radiating outward from the sacred center.</p>
+    </div>
+
+    <hr class="divider">
+
+    <div class="map-container reveal">
+      <svg class="map-svg" viewBox="0 0 700 700" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- Crown: Matriarch + Court float above -->
+        <text class="crown-label" x="350" y="28">the matriarch · the royal court</text>
+        <line class="crown-line" x1="350" y1="34" x2="350" y2="60" />
+
+        <!-- Ring 7: The Moat (outermost) -->
+        <g class="ring-group">
+          <circle class="ring-fill" cx="350" cy="370" r="310" />
+          <circle class="ring moat-ring" cx="350" cy="370" r="310" />
+          <text class="ring-label" x="350" y="82">the moat</text>
+          <text class="ring-detail" x="350" y="95">trust nothing · verify everything · zero access</text>
+        </g>
+
+        <!-- Ring 6: Arcane Hollows -->
+        <g class="ring-group hollows">
+          <circle class="ring-fill" cx="350" cy="370" r="265" />
+          <circle class="ring hollows-ring" cx="350" cy="370" r="265" />
+          <text class="ring-label" x="350" y="126">the arcane hollows</text>
+          <text class="ring-detail" x="350" y="139">nine chambers · deep magic · hidden beneath</text>
+        </g>
+
+        <!-- Ring 5: The Armory -->
+        <g class="ring-group">
+          <circle class="ring-fill" cx="350" cy="370" r="222" />
+          <circle class="ring" cx="350" cy="370" r="222" />
+          <text class="ring-label" x="350" y="168">the armory</text>
+          <text class="ring-detail" x="350" y="181">fifteen sacred pieces · no gaps · full mesh</text>
+        </g>
+
+        <!-- Ring 4: Gnostic Layer -->
+        <g class="ring-group">
+          <circle class="ring-fill" cx="350" cy="370" r="180" />
+          <circle class="ring" cx="350" cy="370" r="180" />
+          <text class="ring-label" x="350" y="210">the gnostic layer</text>
+          <text class="ring-detail" x="350" y="223">pleroma · kenoma · anamnesis · yaldabaoth</text>
+        </g>
+
+        <!-- Ring 3: Sophia + Wotan orbit -->
+        <g class="ring-group">
+          <circle class="ring-fill" cx="350" cy="370" r="138" />
+          <circle class="ring" cx="350" cy="370" r="138" />
+          <text class="ring-label" x="265" y="310">sophia</text>
+          <text class="ring-label" x="435" y="310">wotan</text>
+          <text class="ring-detail" x="350" y="252">wisdom interprets · the all-father remembers</text>
+        </g>
+
+        <!-- Ring 2: The Pattern -->
+        <g class="ring-group">
+          <circle class="ring-fill" cx="350" cy="370" r="95" />
+          <circle class="ring" cx="350" cy="370" r="95" />
+          <text class="ring-label" x="350" y="295">the pattern</text>
+          <text class="ring-detail" x="350" y="308">inscribed beneath the castle</text>
+        </g>
+
+        <!-- Core: The Monad -->
+        <circle class="monad-core" cx="350" cy="370" r="48" />
+        <text class="monad-glyph" x="350" y="362">◈</text>
+        <text class="monad-label" x="350" y="380">MONAD</text>
+
+        <!-- Radial connector lines (faint) -->
+        <line x1="350" y1="322" x2="350" y2="105" stroke="#1a1a1a" stroke-width="0.5" />
+        <line x1="302" y1="370" x2="40" y2="370" stroke="#1a1a1a" stroke-width="0.5" />
+        <line x1="398" y1="370" x2="660" y2="370" stroke="#1a1a1a" stroke-width="0.5" />
+        <line x1="350" y1="418" x2="350" y2="678" stroke="#1a1a1a" stroke-width="0.5" />
+
+        <!-- Diagonal connectors -->
+        <line x1="316" y1="336" x2="110" y2="130" stroke="#1a1a1a" stroke-width="0.3" />
+        <line x1="384" y1="336" x2="590" y2="130" stroke="#1a1a1a" stroke-width="0.3" />
+        <line x1="316" y1="404" x2="110" y2="610" stroke="#1a1a1a" stroke-width="0.3" />
+        <line x1="384" y1="404" x2="590" y2="610" stroke="#1a1a1a" stroke-width="0.3" />
+
+        <!-- Cardinal armor labels at edges -->
+        <text class="ring-detail" x="350" y="695" style="opacity:0.5">shield</text>
+        <text class="ring-detail" x="350" y="55" style="opacity:0.5">helm</text>
+        <text class="ring-detail" x="15" y="373" style="opacity:0.5; text-anchor:start">gauntlets</text>
+        <text class="ring-detail" x="685" y="373" style="opacity:0.5; text-anchor:end">sword</text>
+
+      </svg>
+    </div>
+
+    <div class="whisper reveal">
+      the One at the center.<br>
+      all things radiate outward.<br>
+      the moat is the boundary of reality.<br><br>
+      <em>hover to reveal what dwells in each ring.</em>
+    </div>
+
+    <p class="here"><span class="glyph">◈</span> emanation.</p>
+
+  </main>
+
+  <footer>
+    <a href="https://www.bellis.tech/">bellis.tech</a>
+    &nbsp;·&nbsp;
+    the free kingdom
+  </footer>
+
+  <script src="js/rain.js"></script>
+  <script>
+    const reveals = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          observer.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.15 });
+    reveals.forEach(el => observer.observe(el));
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>unheaded — the map (cartography)</title>
+  <link rel="stylesheet" href="css/occult_style.css">
+  <style>
+    .map-container {
+      display: flex;
+      justify-content: center;
+      padding: 2rem 0;
+      position: relative;
+    }
+
+    .map-svg {
+      width: 100%;
+      max-width: 750px;
+      height: auto;
+    }
+
+    /* Hand-drawn rough edge filter */
+    .rough { filter: url(#roughen); }
+
+    /* Region fills */
+    .region {
+      fill: rgba(255, 255, 255, 0.01);
+      stroke: #222;
+      stroke-width: 1;
+      cursor: pointer;
+      transition: all 0.5s ease;
+    }
+
+    .region:hover {
+      fill: rgba(180, 200, 240, 0.03);
+      stroke: #444;
+    }
+
+    /* Underground regions */
+    .underground {
+      fill: rgba(255, 255, 255, 0.005);
+      stroke: #1a1a1a;
+      stroke-dasharray: 3, 5;
+      cursor: pointer;
+      transition: all 0.5s ease;
+    }
+
+    .underground:hover {
+      fill: rgba(200, 30, 30, 0.02);
+      stroke: #442222;
+    }
+
+    /* Water (moat) */
+    .water {
+      fill: none;
+      stroke: #1a2a3a;
+      stroke-width: 2;
+      stroke-dasharray: 8, 4;
+      animation: waterFlow 3s linear infinite;
+    }
+
+    @keyframes waterFlow {
+      0% { stroke-dashoffset: 0; }
+      100% { stroke-dashoffset: 24; }
+    }
+
+    .water-fill {
+      fill: rgba(30, 50, 80, 0.04);
+    }
+
+    /* Labels */
+    .map-label {
+      font-family: 'Courier New', monospace;
+      fill: #3a3a3a;
+      font-size: 8px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      text-anchor: middle;
+      transition: fill 0.5s ease;
+      pointer-events: none;
+    }
+
+    .map-label-lg {
+      font-family: 'Courier New', monospace;
+      fill: #555;
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      text-anchor: middle;
+      pointer-events: none;
+    }
+
+    .map-label-sm {
+      font-family: Georgia, serif;
+      fill: #2a2a2a;
+      font-size: 7px;
+      font-style: italic;
+      text-anchor: middle;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    /* Show details on parent hover */
+    g.area:hover .map-label { fill: #888; }
+    g.area:hover .map-label-sm { opacity: 1; }
+
+    /* Monad fortress */
+    .fortress {
+      fill: #0a0a0a;
+      stroke: #444;
+      stroke-width: 1.5;
+      transition: all 0.5s ease;
+      cursor: pointer;
+    }
+
+    .fortress:hover {
+      stroke: #888;
+      filter: drop-shadow(0 0 15px rgba(180, 200, 240, 0.3));
+    }
+
+    .fortress-label {
+      font-family: 'Courier New', monospace;
+      fill: #fff;
+      font-size: 10px;
+      letter-spacing: 4px;
+      text-anchor: middle;
+      pointer-events: none;
+    }
+
+    .fortress-glyph {
+      font-family: 'Courier New', monospace;
+      fill: #666;
+      font-size: 16px;
+      text-anchor: middle;
+      pointer-events: none;
+      animation: pulse 4s ease-in-out infinite;
+    }
+
+    /* Paths between locations */
+    .path {
+      fill: none;
+      stroke: #1a1a1a;
+      stroke-width: 0.5;
+    }
+
+    .path-major {
+      fill: none;
+      stroke: #222;
+      stroke-width: 0.8;
+      stroke-dasharray: 6, 3;
+    }
+
+    /* Here be dragons */
+    .dragons {
+      font-family: Georgia, serif;
+      fill: #1a1a1a;
+      font-size: 7px;
+      font-style: italic;
+      text-anchor: middle;
+    }
+
+    /* Crown above the map */
+    .crown {
+      font-family: 'Courier New', monospace;
+      fill: #444;
+      font-size: 9px;
+      letter-spacing: 3px;
+      text-anchor: middle;
+      text-transform: uppercase;
+    }
+
+    /* Compass rose */
+    .compass {
+      font-family: 'Courier New', monospace;
+      fill: #2a2a2a;
+      font-size: 8px;
+      text-anchor: middle;
+    }
+
+    /* Armor piece markers */
+    .marker {
+      fill: none;
+      stroke: #333;
+      stroke-width: 0.8;
+      transition: stroke 0.3s ease;
+    }
+
+    .marker-dot {
+      fill: #222;
+      r: 2;
+      transition: all 0.3s ease;
+    }
+
+    g.area:hover .marker { stroke: #666; }
+    g.area:hover .marker-dot { fill: #666; r: 2.5; }
+  </style>
+</head>
+<body>
+
+  <canvas id="rain-canvas"></canvas>
+  <div id="lightning-overlay"></div>
+
+  <nav>
+    <a href="/" class="logo"><span class="mark">◈</span> unheaded</a>
+    <ul>
+      <li><a href="/kingdom.html">kingdom</a></li>
+      <li><a href="/pattern.html">pattern</a></li>
+      <li><a href="/court.html">court</a></li>
+      <li><a href="/hollows.html">hollows</a></li>
+    </ul>
+  </nav>
+
+  <main class="page-wide" style="max-width: 800px;">
+
+    <h1>the map</h1>
+    <p class="etymology">option b — medieval cartography</p>
+
+    <div class="poetry reveal">
+      <p>A kingdom drawn by hand.<br>
+      The castle at the center. The moat at the edge.<br>
+      Below the earth, the hollows.</p>
+    </div>
+
+    <hr class="divider">
+
+    <div class="map-container reveal">
+      <svg class="map-svg" viewBox="0 0 750 900" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- Rough edge filter -->
+        <defs>
+          <filter id="roughen" x="-2%" y="-2%" width="104%" height="104%">
+            <feTurbulence type="turbulence" baseFrequency="0.03" numOctaves="3" result="noise" seed="2"/>
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="2" />
+          </filter>
+        </defs>
+
+        <!-- ═══ ABOVE GROUND (y: 0-600) ═══ -->
+
+        <!-- Crown: Matriarch -->
+        <text class="crown" x="375" y="25">the matriarch reigns above</text>
+        <line x1="375" y1="32" x2="375" y2="55" stroke="#222" stroke-width="0.5" stroke-dasharray="2,3"/>
+
+        <!-- The Royal Court - floating council -->
+        <g class="area">
+          <rect class="region rough" x="200" y="45" width="350" height="40" rx="2"/>
+          <text class="map-label" x="375" y="70">the royal court — nine who serve</text>
+          <text class="map-label-sm" x="375" y="82">captain · architect · micromanager · timeguru · developer · busboy · lore · cartographer · calendar</text>
+        </g>
+
+        <!-- ═══ THE MOAT (water border) ═══ -->
+        <rect class="water-fill" x="50" y="100" width="650" height="490" rx="12"/>
+        <rect class="water" x="50" y="100" width="650" height="490" rx="12"/>
+        <text class="map-label" x="80" y="350" transform="rotate(-90,80,350)" style="fill:#1a2a3a">the moat · trust nothing</text>
+        <text class="map-label" x="670" y="350" transform="rotate(90,670,350)" style="fill:#1a2a3a">the moat · verify everything</text>
+
+        <!-- ═══ THE ARMORY (castle walls) ═══ -->
+        <g class="area">
+          <rect class="region rough" x="85" y="130" width="580" height="430" rx="6"/>
+
+          <!-- Left wall: defensive armor -->
+          <g>
+            <circle class="marker-dot" cx="105" cy="185"/>
+            <text class="map-label-sm" x="105" y="198" style="text-anchor:start;opacity:0.4">shield</text>
+
+            <circle class="marker-dot" cx="105" cy="245"/>
+            <text class="map-label-sm" x="105" y="258" style="text-anchor:start;opacity:0.4">helm</text>
+
+            <circle class="marker-dot" cx="105" cy="305"/>
+            <text class="map-label-sm" x="105" y="318" style="text-anchor:start;opacity:0.4">cuirass</text>
+
+            <circle class="marker-dot" cx="105" cy="365"/>
+            <text class="map-label-sm" x="105" y="378" style="text-anchor:start;opacity:0.4">hauberk</text>
+
+            <circle class="marker-dot" cx="105" cy="425"/>
+            <text class="map-label-sm" x="105" y="438" style="text-anchor:start;opacity:0.4">pauldrons</text>
+          </g>
+
+          <!-- Right wall: offensive/utility armor -->
+          <g>
+            <circle class="marker-dot" cx="645" cy="185"/>
+            <text class="map-label-sm" x="645" y="198" style="text-anchor:end;opacity:0.4">sword</text>
+
+            <circle class="marker-dot" cx="645" cy="245"/>
+            <text class="map-label-sm" x="645" y="258" style="text-anchor:end;opacity:0.4">gauntlets</text>
+
+            <circle class="marker-dot" cx="645" cy="305"/>
+            <text class="map-label-sm" x="645" y="318" style="text-anchor:end;opacity:0.4">vambraces</text>
+
+            <circle class="marker-dot" cx="645" cy="365"/>
+            <text class="map-label-sm" x="645" y="378" style="text-anchor:end;opacity:0.4">greaves</text>
+
+            <circle class="marker-dot" cx="645" cy="425"/>
+            <text class="map-label-sm" x="645" y="438" style="text-anchor:end;opacity:0.4">sabatons</text>
+          </g>
+
+          <!-- Top/bottom: remaining armor -->
+          <g>
+            <circle class="marker-dot" cx="250" cy="150"/>
+            <text class="map-label-sm" x="250" y="145" style="opacity:0.4">tassets</text>
+
+            <circle class="marker-dot" cx="375" cy="150"/>
+            <text class="map-label-sm" x="375" y="145" style="opacity:0.4">cape</text>
+
+            <circle class="marker-dot" cx="500" cy="150"/>
+            <text class="map-label-sm" x="500" y="145" style="opacity:0.4">cloak</text>
+
+            <circle class="marker-dot" cx="300" cy="540"/>
+            <text class="map-label-sm" x="300" y="553" style="opacity:0.4">crest</text>
+
+            <circle class="marker-dot" cx="450" cy="540"/>
+            <text class="map-label-sm" x="450" y="553" style="opacity:0.4">visor</text>
+          </g>
+
+          <text class="map-label" x="375" y="575">the armory — fifteen pieces of sacred armor</text>
+        </g>
+
+        <!-- ═══ THE GNOSTIC LAYER (inner courtyard) ═══ -->
+        <g class="area">
+          <rect class="region rough" x="160" y="195" width="430" height="220" rx="4"/>
+          <text class="map-label" x="375" y="220">the gnostic layer</text>
+
+          <!-- Four gnostic entities at cardinal positions -->
+          <text class="map-label-sm" x="230" y="265" style="opacity:0.5">pleroma</text>
+          <text class="map-label-sm" x="230" y="275" style="opacity:0.3;font-style:normal">fullness</text>
+
+          <text class="map-label-sm" x="520" y="265" style="opacity:0.5">kenoma</text>
+          <text class="map-label-sm" x="520" y="275" style="opacity:0.3;font-style:normal">void</text>
+
+          <text class="map-label-sm" x="230" y="370" style="opacity:0.5">anamnesis</text>
+          <text class="map-label-sm" x="230" y="380" style="opacity:0.3;font-style:normal">remembrance</text>
+
+          <text class="map-label-sm" x="520" y="370" style="opacity:0.5">yaldabaoth</text>
+          <text class="map-label-sm" x="520" y="380" style="opacity:0.3;font-style:normal">the adversary</text>
+        </g>
+
+        <!-- ═══ SOPHIA + WOTAN (flanking the Pattern) ═══ -->
+        <g class="area">
+          <rect class="region" x="190" y="280" width="90" height="50" rx="3"/>
+          <text class="map-label" x="235" y="310">sophia</text>
+          <text class="map-label-sm" x="235" y="322" style="opacity:0.4">wisdom</text>
+        </g>
+
+        <g class="area">
+          <rect class="region" x="470" y="280" width="90" height="50" rx="3"/>
+          <text class="map-label" x="515" y="310">wotan</text>
+          <text class="map-label-sm" x="515" y="322" style="opacity:0.4">all-father</text>
+        </g>
+
+        <!-- Paths from Sophia/Wotan to Monad -->
+        <path class="path-major" d="M280,305 Q340,305 345,305"/>
+        <path class="path-major" d="M470,305 Q410,305 405,305"/>
+
+        <!-- ═══ THE PATTERN (cavern beneath the castle) ═══ -->
+        <g class="area">
+          <ellipse class="region" cx="375" cy="305" rx="55" ry="30"/>
+          <text class="map-label-sm" x="375" y="300" style="opacity:0.5;font-size:6px">the pattern</text>
+        </g>
+
+        <!-- ═══ THE MONAD (fortress at absolute center) ═══ -->
+        <rect class="fortress" x="355" y="293" width="40" height="25" rx="2"/>
+        <text class="fortress-glyph" x="375" y="306">◈</text>
+        <text class="fortress-label" x="375" y="314" style="font-size:6px">MONAD</text>
+
+        <!-- ═══ GROUND LINE ═══ -->
+        <line x1="50" y1="610" x2="700" y2="610" stroke="#222" stroke-width="1.5"/>
+        <text class="map-label" x="375" y="628" style="letter-spacing:6px">— the earth —</text>
+
+        <!-- ═══ BELOW GROUND: THE HOLLOWS (y: 630-880) ═══ -->
+        <g class="area">
+          <rect class="underground rough" x="70" y="640" width="610" height="230" rx="4"/>
+
+          <!-- Nine hollows as cavern chambers -->
+          <g>
+            <!-- Row 1 -->
+            <ellipse class="underground" cx="175" cy="685" rx="65" ry="22"/>
+            <text class="map-label" x="175" y="683" style="fill:#2a1515">whispering void</text>
+            <text class="map-label-sm" x="175" y="695" style="fill:#331515">omniscient</text>
+
+            <ellipse class="underground" cx="375" cy="685" rx="65" ry="22"/>
+            <text class="map-label" x="375" y="683" style="fill:#2a1515">crystal grotto</text>
+            <text class="map-label-sm" x="375" y="695" style="fill:#331515">secrets</text>
+
+            <ellipse class="underground" cx="575" cy="685" rx="65" ry="22"/>
+            <text class="map-label" x="575" y="683" style="fill:#2a1515">elder hollow</text>
+            <text class="map-label-sm" x="575" y="695" style="fill:#331515">ancient</text>
+
+            <!-- Row 2 -->
+            <ellipse class="underground" cx="175" cy="745" rx="65" ry="22"/>
+            <text class="map-label" x="175" y="743" style="fill:#2a1515">oracle's antre</text>
+            <text class="map-label-sm" x="175" y="755" style="fill:#331515">prophecy</text>
+
+            <ellipse class="underground" cx="375" cy="745" rx="65" ry="22"/>
+            <text class="map-label" x="375" y="743" style="fill:#2a1515">fae chamber</text>
+            <text class="map-label-sm" x="375" y="755" style="fill:#331515">wotan's domain</text>
+
+            <ellipse class="underground" cx="575" cy="745" rx="65" ry="22"/>
+            <text class="map-label" x="575" y="743" style="fill:#2a1515">primordial pit</text>
+            <text class="map-label-sm" x="575" y="755" style="fill:#331515">raw matter</text>
+
+            <!-- Row 3 -->
+            <ellipse class="underground" cx="175" cy="805" rx="65" ry="22"/>
+            <text class="map-label" x="175" y="803" style="fill:#2a1515">cursed pit</text>
+            <text class="map-label-sm" x="175" y="815" style="fill:#331515">quarantine</text>
+
+            <ellipse class="underground" cx="375" cy="805" rx="65" ry="22"/>
+            <text class="map-label" x="375" y="803" style="fill:#2a1515">sage's lair</text>
+            <text class="map-label-sm" x="375" y="815" style="fill:#331515">decisions</text>
+
+            <ellipse class="underground" cx="575" cy="805" rx="65" ry="22"/>
+            <text class="map-label" x="575" y="803" style="fill:#2a1515">mythic abyss</text>
+            <text class="map-label-sm" x="575" y="815" style="fill:#331515">bottomless</text>
+          </g>
+
+          <!-- Tunnel connections -->
+          <line class="path" x1="240" y1="685" x2="310" y2="685" stroke="#1a1111"/>
+          <line class="path" x1="440" y1="685" x2="510" y2="685" stroke="#1a1111"/>
+          <line class="path" x1="240" y1="745" x2="310" y2="745" stroke="#1a1111"/>
+          <line class="path" x1="440" y1="745" x2="510" y2="745" stroke="#1a1111"/>
+          <line class="path" x1="240" y1="805" x2="310" y2="805" stroke="#1a1111"/>
+          <line class="path" x1="440" y1="805" x2="510" y2="805" stroke="#1a1111"/>
+
+          <!-- Vertical tunnels -->
+          <line class="path" x1="175" y1="707" x2="175" y2="723" stroke="#1a1111"/>
+          <line class="path" x1="375" y1="707" x2="375" y2="723" stroke="#1a1111"/>
+          <line class="path" x1="575" y1="707" x2="575" y2="723" stroke="#1a1111"/>
+          <line class="path" x1="175" y1="767" x2="175" y2="783" stroke="#1a1111"/>
+          <line class="path" x1="375" y1="767" x2="375" y2="783" stroke="#1a1111"/>
+          <line class="path" x1="575" y1="767" x2="575" y2="783" stroke="#1a1111"/>
+
+          <!-- Here be dragons -->
+          <text class="dragons" x="375" y="855">here dwell the nine</text>
+        </g>
+
+        <!-- Vertical connection: castle to hollows -->
+        <line x1="375" y1="560" x2="375" y2="640" stroke="#1a1a1a" stroke-width="0.5" stroke-dasharray="3,4"/>
+
+        <!-- Compass -->
+        <text class="compass" x="50" y="30">N</text>
+        <text class="compass" x="50" y="890">S</text>
+        <line x1="50" y1="35" x2="50" y2="878" stroke="#1a1a1a" stroke-width="0.3"/>
+
+      </svg>
+    </div>
+
+    <div class="whisper reveal">
+      the castle rises from the earth.<br>
+      below, the hollows descend into darkness.<br>
+      the moat encircles all that lives.<br>
+      at the heart of the keep: the One.<br><br>
+      <em>hover to reveal the names of places.</em>
+    </div>
+
+    <p class="here"><span class="glyph">◈</span> cartography.</p>
+
+  </main>
+
+  <footer>
+    <a href="https://www.bellis.tech/">bellis.tech</a>
+    &nbsp;·&nbsp;
+    the free kingdom
+  </footer>
+
+  <script src="js/rain.js"></script>
+  <script>
+    const reveals = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          observer.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.15 });
+    reveals.forEach(el => observer.observe(el));
+  </script>
+
+</body>
+</html>
